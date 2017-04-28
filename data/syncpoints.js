@@ -1,4 +1,5 @@
 const request = require("request");
+const moment = require("moment");
 const serverCredentials = require("../serverCredentials.js");
 
 const endpoint = "https://api.syncplicity.com/syncpoint/syncpoints.svc/"
@@ -20,8 +21,19 @@ module.exports.getAll = function(context, complete, modules) {
 				return complete().setBody(error).runtimeError().next();
 			}
 
-			console.log("Got a result");
-			return complete().setBody(body).ok().next();
+			var responseBody = []
+			body = JSON.parse(body);
+			body.forEach(function(syncpoint) {
+				var responseSyncpoint = {};
+				responseSyncpoint._id = syncpoint.Id;
+				responseSyncpoint.Type = syncpoint.Type;
+				responseSyncpoint.Name = syncpoint.Name;
+				responseSyncpoint.RootFolderId = syncpoint.RootFolderId;
+				responseSyncpoint._acl = {};
+				responseSyncpoint._kmd = {"ect": moment(), "lmt": moment()};
+				responseBody.push(responseSyncpoint);
+			})
+			return complete().setBody(responseBody).ok().next();
 		});
 	})
 };
