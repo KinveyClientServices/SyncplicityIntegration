@@ -1,8 +1,7 @@
 const sdk = require("kinvey-flex-sdk");
 const syncpointsIntegration = require("./data/syncpoints.js");
-
 const foldersIntegration = require("./data/folders.js");
-
+const filesIntegration = require("./data/files.js");
 const serverCredentials = require("./serverCredentials.js");
 
 const service = sdk.service(function(err, flex) {
@@ -16,4 +15,7 @@ const service = sdk.service(function(err, flex) {
 
 	const folders = flexData.serviceObject("Folders");
 	folders.onGetByQuery(foldersIntegration.getByQuery);
+
+	const files = flexData.serviceObject("Files");
+	files.onGetByQuery(filesIntegration.getByQuery);
 });
