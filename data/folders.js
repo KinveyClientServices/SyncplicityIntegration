@@ -12,7 +12,7 @@ const isValidValues = (syncpointId, folderId) => {
   return ((syncpointId > 0) && (folderId > 0)) ? true : false;
 }
 
-module.exports.getByQuery = function(context, complete, modules) {
+const getByQuery = function(context, complete, modules) {
   const { syncpoint_id, folder_id } = context.query;
 
   //syncpoint_id or folder_id are not valid
@@ -52,3 +52,35 @@ module.exports.getByQuery = function(context, complete, modules) {
     return complete(responseBody).setBody().ok().next();
   });
 };
+
+const deleteByQuery = function(context, complete, modules) {
+  const { syncpoint_id, folder_id } = context.query;
+
+  //syncpoint_id or folder_id are not valid
+  if(!isValidValues(syncpoint_id, folder_id)) {
+    return complete().setBody(new Error("Invalid parameters name or value")).badRequest().next();
+  }
+  const endpoint = `https://api.syncplicity.com/sync/folder.svc/${syncpoint_id}/folder/${folder_id}`;
+  const requestParams = {
+    "method": "DELETE",
+    "uri": endpoint
+  };
+  syncplicityRequest(requestParams, function(error, response, body) {
+    if(error) {
+      console.log("Something bad happened: " + JSON.stringify(error));
+      return complete().setBody(error).runtimeError().next();
+    }
+    //syncpoint_id or folder_id are not correct
+    if(response.statusCode == 404) {
+      return complete()
+      .setBody(new Error("Syncpoint could not be found. Please check :syncpoint_id"))
+      .notFound()
+      .next();
+    }
+
+    return complete().ok().next();
+  });
+};
+
+module.exports.getByQuery = getByQuery;
+module.exports.deleteByQuery = deleteByQuery;
