@@ -13,12 +13,13 @@ module.exports.getAll = function(context, complete, modules) {
 			console.log("Something bad happened: " + JSON.stringify(error));
 			return complete().setBody(error).runtimeError().next();
 		}
-		
+
 		var responseBody = []
 		body = JSON.parse(body);
 		body.forEach(function(syncpoint) {
 			var responseSyncpoint = {};
 			responseSyncpoint._id = syncpoint.Id;
+			responseSyncpoint.Id = syncpoint.Id;
 			responseSyncpoint.Type = syncpoint.Type;
 			responseSyncpoint.Name = syncpoint.Name;
 			responseSyncpoint.RootFolderId = syncpoint.RootFolderId;
