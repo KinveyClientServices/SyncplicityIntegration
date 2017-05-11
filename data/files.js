@@ -13,7 +13,9 @@ const isValidValues = (syncpointId, folderId) => {
 }
 
 module.exports.getByQuery = function(context, complete, modules) {
-  const { syncpoint_id, folder_id } = context.query;
+  //create object from query string
+  const query = JSON.parse(context.query.query.replace('query:',''));
+  const { syncpoint_id, folder_id } = query;
 
   //syncpoint_id or folder_id are not valid
   if(!isValidValues(syncpoint_id, folder_id)) {
