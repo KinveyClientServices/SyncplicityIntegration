@@ -2,27 +2,31 @@ const request = require("request");
 const moment = require("moment");
 const { syncplicityRequest } = require("./request.js");
 
-const isValidValues = (syncpointId, folderId) => {
-  if((typeof syncpointId === 'undefined') || (typeof folderId === 'undefined')) {
-    return false;
+let getParameters = function(queryString, ...parameters) {
+  const regexp = /\d+?\D/g;//all digets
+  let result = [];
+  for(let i = 0; i < parameters.length; i++) {
+    let pos = queryString.indexOf(parameters[i]);
+    if(pos < 0) {
+      return new Error("Invalid parameters name or value");
+    }
+    regexp.lastIndex = pos;
+    result.push(regexp.exec(queryString)[0].replace(/\D/g, ''));
   }
-  if(!(syncpointId.match(/^\d+$/)) || !(folderId.match(/^\d+$/))) {
-    return false;
-  }
-  return ((syncpointId > 0) && (folderId > 0)) ? true : false;
+  return result;
 }
 
 module.exports.getByQuery = function(context, complete, modules) {
-  //create object from query string
-  const query = JSON.parse(context.query.query.replace('query:',''));
-  const { syncpoint_id, folder_id } = query;
+  const queryStr = context.query.query.toLowerCase();
+  let endpoint;
 
-  //syncpoint_id or folder_id are not valid
-  if(!isValidValues(syncpoint_id, folder_id)) {
-    return complete().setBody(new Error("Invalid parameters name or value")).badRequest().next();
+  try {
+    let [syncpoint_id, folder_id] = getParameters(queryStr, 'syncpoint_id', 'folder_id');
+    endpoint = `https://api.syncplicity.com/sync/folder_files.svc/${syncpoint_id}/folder/${folder_id}/files`;
+  } catch(error) {
+    return complete().setBody(error).badRequest().next();
   }
 
-  const endpoint = `https://api.syncplicity.com/sync/folder_files.svc/${syncpoint_id}/folder/${folder_id}/files`;
   const requestParams = {
     "method": "GET",
     "uri": endpoint
