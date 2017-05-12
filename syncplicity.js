@@ -12,6 +12,10 @@ const service = sdk.service(function(err, flex) {
 
 	const syncpoints = flexData.serviceObject("Syncpoints");
 	syncpoints.onGetAll(syncpointsIntegration.getAll);
+	syncpoints.onGetByQuery(syncpointsIntegration.getByQuery);
+	syncpoints.onGetById(syncpointsIntegration.getById);
+	syncpoints.onGetCount(syncpointsIntegration.getCount);
+	syncpoints.onGetCountByQuery(syncpointsIntegration.getCountQuery);
 
 	const folders = flexData.serviceObject("Folders");
 	folders.onGetByQuery(foldersIntegration.getByQuery);
