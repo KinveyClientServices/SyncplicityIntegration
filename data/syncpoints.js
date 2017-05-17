@@ -19,6 +19,7 @@ let getAll = function(context, complete, modules) {
 		body.forEach(function(syncpoint) {
 			var responseSyncpoint = {};
 			responseSyncpoint._id = syncpoint.Id;
+			responseSyncpoint.Id = syncpoint.Id;
 			responseSyncpoint.Type = syncpoint.Type;
 			responseSyncpoint.Name = syncpoint.Name;
 			responseSyncpoint.RootFolderId = syncpoint.RootFolderId;

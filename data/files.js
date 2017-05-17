@@ -21,8 +21,8 @@ module.exports.getByQuery = function(context, complete, modules) {
   let endpoint;
 
   try {
-    let [syncpoint_id, folder_id] = getParameters(queryStr, 'syncpoint_id', 'folder_id');
-    endpoint = `https://api.syncplicity.com/sync/folder_files.svc/${syncpoint_id}/folder/${folder_id}/files`;
+    let [SyncpointId, FolderId] = getParameters(queryStr, 'SyncpointId', 'FolderId');
+    endpoint = `https://api.syncplicity.com/sync/folder_files.svc/${SyncpointId}/folder/${FolderId}/files`;
   } catch(error) {
     return complete().setBody(error).badRequest().next();
   }
@@ -36,10 +36,10 @@ module.exports.getByQuery = function(context, complete, modules) {
       console.log("Something bad happened: " + JSON.stringify(error));
       return complete().setBody(error).runtimeError().next();
     }
-    //syncpoint_id or folder_id are not correct
+    //SyncpointId or FolderId are not correct
     if(response.statusCode == 404) {
       return complete()
-      .setBody(new Error("Folder could not be found. Please check :syncpoint_id and :folder_id"))
+      .setBody(new Error("Folder could not be found. Please check :SyncpointId and :FolderId"))
       .notFound()
       .next();
     }
@@ -49,6 +49,7 @@ module.exports.getByQuery = function(context, complete, modules) {
     body.forEach(function(file) {
       var responseFile = {};
       responseFile._id = file.FileId;
+      responseFile.FileId = file.FileId;
       responseFile.SyncpointId = file.SyncpointId;
       responseFile.Filename = file.Filename;
       responseFile.LatestVersionId = file.LatestVersionId;

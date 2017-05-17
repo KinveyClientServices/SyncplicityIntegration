@@ -13,13 +13,11 @@ const service = sdk.service(function(err, flex) {
 	const syncpoints = flexData.serviceObject("Syncpoints");
 	syncpoints.onGetAll(syncpointsIntegration.getAll);
 	syncpoints.onGetByQuery(syncpointsIntegration.getByQuery);
-	syncpoints.onGetById(syncpointsIntegration.getById);
-	syncpoints.onGetCount(syncpointsIntegration.getCount);
-	syncpoints.onGetCountByQuery(syncpointsIntegration.getCountQuery);
 
 	const folders = flexData.serviceObject("Folders");
 	folders.onGetByQuery(foldersIntegration.getByQuery);
 	folders.onDeleteByQuery(foldersIntegration.deleteByQuery);
+	folders.onInsert(foldersIntegration.insert);
 
 	const files = flexData.serviceObject("Files");
 	files.onGetByQuery(filesIntegration.getByQuery);

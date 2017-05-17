@@ -15,7 +15,7 @@ module.exports.syncplicityRequest = function(params, callback) {
 		};
     const requestParams = Object.assign({}, defaultParams, params);
     request(requestParams, function(error, response, body) {
-  		callback(error, response, body);
-  	});
+    	callback(error, response, body);
+    });
   });
 };

@@ -21,8 +21,8 @@ const getByQuery = function(context, complete, modules) {
   let endpoint;
 
   try {
-    let [syncpoint_id, folder_id] = getParameters(queryStr, 'syncpoint_id', 'folder_id');
-    endpoint = `https://api.syncplicity.com/sync/folder_folders.svc/${syncpoint_id}/folder/${folder_id}/folders`;
+    let [SyncpointId, FolderId] = getParameters(queryStr, 'SyncpointId', 'FolderId');
+    endpoint = `https://api.syncplicity.com/sync/folder_folders.svc/${SyncpointId}/folder/${FolderId}/folders`;
   } catch(error) {
     return complete().setBody(error).badRequest().next();
   }
@@ -36,10 +36,10 @@ const getByQuery = function(context, complete, modules) {
       console.log("Something bad happened: " + JSON.stringify(error));
       return complete().setBody(error).runtimeError().next();
     }
-    //syncpoint_id or folder_id are not correct
+    //SyncpointId or FolderId are not correct
     if(response.statusCode == 404) {
       return complete()
-      .setBody(new Error("Folder could not be found. Please check :syncpoint_id and :folder_id"))
+      .setBody(new Error("Folder could not be found. Please check :SyncpointId and :FolderId"))
       .notFound()
       .next();
     }
@@ -49,6 +49,7 @@ const getByQuery = function(context, complete, modules) {
     body.forEach(function(folder) {
       var responseFolder = {};
       responseFolder._id = folder.FolderId;
+      responseFolder.FolderId = folder.FolderId;
       responseFolder.SyncpointId = folder.SyncpointId;
       responseFolder.Name = folder.Name;
       responseFolder._acl = {};
@@ -64,8 +65,8 @@ const deleteByQuery = function(context, complete, modules) {
   let endpoint;
 
   try {
-    let [syncpoint_id, folder_id] = getParameters(queryStr, 'syncpoint_id', 'folder_id');
-    endpoint = `https://api.syncplicity.com/sync/folder.svc/${syncpoint_id}/folder/${folder_id}`
+    let [SyncpointId, FolderId] = getParameters(queryStr, 'SyncpointId', 'FolderId');
+    endpoint = `https://api.syncplicity.com/sync/folder.svc/${SyncpointId}/folder/${FolderId}`
   } catch(error) {
     return complete().setBody(error).badRequest().next();
   }
@@ -79,10 +80,10 @@ const deleteByQuery = function(context, complete, modules) {
       console.log("Something bad happened: " + JSON.stringify(error));
       return complete().setBody(error).runtimeError().next();
     }
-    //syncpoint_id or folder_id are not correct
+    //SyncpointId or FolderId are not correct
     if(response.statusCode == 404) {
       return complete()
-      .setBody(new Error("Syncpoint could not be found. Please check :syncpoint_id"))
+      .setBody(new Error("Syncpoint could not be found. Please check :SyncpointId"))
       .notFound()
       .next();
     }
@@ -91,5 +92,46 @@ const deleteByQuery = function(context, complete, modules) {
   });
 };
 
+const insert = function(context, complete, modules) {
+  let { ParentFolderId, SyncpointId, Name } = context.body;
+  let body = [{ Name, "Status": 1 }];
+  let endpoint = `https://api.syncplicity.com/sync/folder_folders.svc/${SyncpointId}/folder/${ParentFolderId}/folders`;
+  const requestParams = {
+    "method": "POST",
+    "uri": endpoint,
+    "body": JSON.stringify(body),
+  };
+console.log(requestParams);
+  syncplicityRequest(requestParams, function(error, response, body) {
+    if(error) {
+      console.log("Something bad happened: " + JSON.stringify(error));
+      return complete().setBody(error).runtimeError().next();
+    }
+    //SyncpointId or FolderId are not correct
+    if(response.statusCode == 404) {
+      return complete()
+      .setBody(new Error("Syncpoint could not be found. Please check :SyncpointId"))
+      .notFound()
+      .next();
+    }
+    var responseBody = [];
+    body = JSON.parse(body);
+    body.forEach(function(folder) {
+      var responseFolder = {};
+      responseFolder._id = folder.FolderId;
+      responseFolder.FolderId = folder.FolderId;
+      responseFolder.SyncpointId = folder.SyncpointId;
+      responseFolder.Name = folder.Name;
+      responseFolder.VirtualPath = folder.VirtualPath;
+      responseFolder.ParentFolderId = ParentFolderId;
+      responseFolder._acl = {};
+      responseFolder._kmd = {"ect": moment(), "lmt": moment()};
+      responseBody.push(responseFolder);
+    });
+    return complete(responseBody).setBody().ok().next();
+  });
+};
+
 module.exports.getByQuery = getByQuery;
 module.exports.deleteByQuery = deleteByQuery;
+module.exports.insert = insert;
