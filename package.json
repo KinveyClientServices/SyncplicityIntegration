@@ -1,6 +1,6 @@
 {
   "name": "syncplicity-integration",
-  "version": "0.0.13",
+  "version": "0.0.22",
   "private": true,
   "scripts": {
     "start": "node .",

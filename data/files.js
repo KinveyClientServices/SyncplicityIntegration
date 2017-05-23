@@ -8,7 +8,7 @@ let getParameters = function(queryString, ...parameters) {
   for(let i = 0; i < parameters.length; i++) {
     let pos = queryString.indexOf(parameters[i]);
     if(pos < 0) {
-      return new Error("Invalid parameters name or value");
+      throw new Error("Invalid parameters name or value");
     }
     regexp.lastIndex = pos;
     result.push(regexp.exec(queryString)[0].replace(/\D/g, ''));
@@ -16,15 +16,21 @@ let getParameters = function(queryString, ...parameters) {
   return result;
 }
 
-module.exports.getByQuery = function(context, complete, modules) {
-  const queryStr = context.query.query.toLowerCase();
+const getByQuery = function(context, complete, modules) {
+  const queryStr = context.query.query;
   let endpoint;
 
   try {
     let [SyncpointId, FolderId] = getParameters(queryStr, 'SyncpointId', 'FolderId');
     endpoint = `https://api.syncplicity.com/sync/folder_files.svc/${SyncpointId}/folder/${FolderId}/files`;
   } catch(error) {
-    return complete().setBody(error).badRequest().next();
+    const errorMessage = `Error:
+      method: ${context.method}
+      query: ${queryStr}`;
+      console.log(errorMessage);
+    return complete()
+      .setBody(new Error(errorMessage))
+      .badRequest().next();
   }
 
   const requestParams = {
@@ -48,7 +54,7 @@ module.exports.getByQuery = function(context, complete, modules) {
     body = JSON.parse(body);
     body.forEach(function(file) {
       var responseFile = {};
-      responseFile._id = file.FileId;
+      responseFile._id = file.FileId.toString();
       responseFile.FileId = file.FileId;
       responseFile.SyncpointId = file.SyncpointId;
       responseFile.Filename = file.Filename;
@@ -60,3 +66,46 @@ module.exports.getByQuery = function(context, complete, modules) {
     return complete(responseBody).setBody().ok().next();
   });
 };
+
+const deleteByQuery = function(context, complete, modules) {
+  const queryStr = context.query.query;
+  console.log(queryStr);
+  let endpoint;
+
+  try {
+    let [SyncpointId, LatestVersionId] = getParameters(queryStr, 'SyncpointId', 'LatestVersionId');
+    endpoint = `https://api.syncplicity.com/sync/file.svc/${SyncpointId}/file/${LatestVersionId}`
+  } catch(error) {
+    const errorMessage = `Error:
+      method: ${context.method}
+      query: ${queryStr}`;
+      console.log(errorMessage);
+    return complete()
+      .setBody(new Error(errorMessage))
+      .badRequest().next();
+  }
+
+  const requestParams = {
+    "method": "DELETE",
+    "uri": endpoint
+  };
+  syncplicityRequest(requestParams, function(error, response, body) {
+    if(error) {
+      console.log("Something bad happened: " + JSON.stringify(error));
+      return complete().setBody(error).runtimeError().next();
+    }
+    console.log(response.statusCode);
+    //SyncpointId or LatestVersionId are not correct
+    if(parseInt(response.statusCode/100) == 4) {
+      return complete()
+      .setBody(body)
+      .badRequest()
+      .next();
+    }
+
+    return complete().setBody(JSON.stringify({count: 1})).ok().next();
+  });
+};
+
+module.exports.getByQuery = getByQuery;
+module.exports.deleteByQuery = deleteByQuery;

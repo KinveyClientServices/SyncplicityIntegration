@@ -8,7 +8,7 @@ let getParameters = function(queryString, ...parameters) {
   for(let i = 0; i < parameters.length; i++) {
     let pos = queryString.indexOf(parameters[i]);
     if(pos < 0) {
-      return new Error("Invalid parameters name or value");
+      throw new Error(`invalid parameters name or value`);
     }
     regexp.lastIndex = pos;
     result.push(regexp.exec(queryString)[0].replace(/\D/g, ''));
@@ -17,14 +17,20 @@ let getParameters = function(queryString, ...parameters) {
 }
 
 const getByQuery = function(context, complete, modules) {
-  const queryStr = context.query.query.toLowerCase();
+  const queryStr = context.query.query;
   let endpoint;
 
   try {
     let [SyncpointId, FolderId] = getParameters(queryStr, 'SyncpointId', 'FolderId');
     endpoint = `https://api.syncplicity.com/sync/folder_folders.svc/${SyncpointId}/folder/${FolderId}/folders`;
   } catch(error) {
-    return complete().setBody(error).badRequest().next();
+    const errorMessage = `Error:
+      method: ${context.method}
+      query: ${queryStr}`;
+      console.log(errorMessage);
+    return complete()
+      .setBody(new Error(errorMessage))
+      .badRequest().next();
   }
 
   const requestParams = {
@@ -48,7 +54,7 @@ const getByQuery = function(context, complete, modules) {
     body = JSON.parse(body);
     body.forEach(function(folder) {
       var responseFolder = {};
-      responseFolder._id = folder.FolderId;
+      responseFolder._id = folder.FolderId.toString();
       responseFolder.FolderId = folder.FolderId;
       responseFolder.SyncpointId = folder.SyncpointId;
       responseFolder.Name = folder.Name;
@@ -61,14 +67,21 @@ const getByQuery = function(context, complete, modules) {
 };
 
 const deleteByQuery = function(context, complete, modules) {
-  const queryStr = context.query.query.toLowerCase();
+  const queryStr = context.query.query;
+  console.log(queryStr);
   let endpoint;
 
   try {
     let [SyncpointId, FolderId] = getParameters(queryStr, 'SyncpointId', 'FolderId');
     endpoint = `https://api.syncplicity.com/sync/folder.svc/${SyncpointId}/folder/${FolderId}`
   } catch(error) {
-    return complete().setBody(error).badRequest().next();
+    const errorMessage = `Error:
+      method: ${context.method}
+      query: ${queryStr}`;
+      console.log(errorMessage);
+    return complete()
+      .setBody(new Error(errorMessage))
+      .badRequest().next();
   }
 
   const requestParams = {
@@ -88,7 +101,7 @@ const deleteByQuery = function(context, complete, modules) {
       .next();
     }
 
-    return complete().ok().next();
+    return complete().setBody(JSON.stringify({count: 1})).ok().next();
   });
 };
 
@@ -96,12 +109,13 @@ const insert = function(context, complete, modules) {
   let { ParentFolderId, SyncpointId, Name } = context.body;
   let body = [{ Name, "Status": 1 }];
   let endpoint = `https://api.syncplicity.com/sync/folder_folders.svc/${SyncpointId}/folder/${ParentFolderId}/folders`;
+
   const requestParams = {
     "method": "POST",
     "uri": endpoint,
     "body": JSON.stringify(body),
   };
-console.log(requestParams);
+
   syncplicityRequest(requestParams, function(error, response, body) {
     if(error) {
       console.log("Something bad happened: " + JSON.stringify(error));
@@ -116,9 +130,10 @@ console.log(requestParams);
     }
     var responseBody = [];
     body = JSON.parse(body);
+    let ParentFolderId = this.ParentFolderId;
     body.forEach(function(folder) {
       var responseFolder = {};
-      responseFolder._id = folder.FolderId;
+      responseFolder._id = folder.FolderId.toString();
       responseFolder.FolderId = folder.FolderId;
       responseFolder.SyncpointId = folder.SyncpointId;
       responseFolder.Name = folder.Name;
@@ -129,7 +144,7 @@ console.log(requestParams);
       responseBody.push(responseFolder);
     });
     return complete(responseBody).setBody().ok().next();
-  });
+  }.bind({ ParentFolderId }));
 };
 
 module.exports.getByQuery = getByQuery;

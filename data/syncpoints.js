@@ -18,7 +18,7 @@ let getAll = function(context, complete, modules) {
 		body = JSON.parse(body);
 		body.forEach(function(syncpoint) {
 			var responseSyncpoint = {};
-			responseSyncpoint._id = syncpoint.Id;
+			responseSyncpoint._id = syncpoint.Id.toString();
 			responseSyncpoint.Id = syncpoint.Id;
 			responseSyncpoint.Type = syncpoint.Type;
 			responseSyncpoint.Name = syncpoint.Name;

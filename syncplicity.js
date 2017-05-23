@@ -21,4 +21,5 @@ const service = sdk.service(function(err, flex) {
 
 	const files = flexData.serviceObject("Files");
 	files.onGetByQuery(filesIntegration.getByQuery);
+	files.onDeleteByQuery(filesIntegration.deleteByQuery);
 });
